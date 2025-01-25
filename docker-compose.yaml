@@ -2,10 +2,12 @@ services:
   php:
     container_name: php_${PROJECT_NAME}
     build:
-      context: ./
-      dockerfile: docker/configs/php/Dockerfile
+      context: ../
+      dockerfile: ./docker/configs/php/Dockerfile
       args:
         WORKDIR: ${WORKDIR}
+        PUID: ${PUID}
+        PGID: ${PGID}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
@@ -13,4 +15,4 @@ services:
       XDEBUG_CONFIG: remote_host={{YOUR_IP_ADDRESS}}
       PHP_IDE_CONFIG: serverName=docker
     volumes:
-      - ./:${WORKDIR}
+      - ../:${WORKDIR}
