@@ -1,8 +1,40 @@
 #!/usr/bin/env php
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+use App\Core\ConfigParser\Factories\LoaderConfigFactory;
+use App\Core\ConfigParser\ConfigParser;
+use App\Core\DependencyInjection\Container\Container;
+use App\Core\DependencyInjection\Factories\ServiceConfigFactory;
+use App\Core\DependencyInjection\ParamContainer\ParamContainer;
+use App\Core\DependencyInjection\ServiceConfigLoader\PhpFileFinder;
+use App\Core\DependencyInjection\ServiceConfigLoader\ServiceConfigLoader;
+use App\Core\Kernel;
 
-use App\Test;
+define('ROOT_DIR', dirname(__DIR__) . DIRECTORY_SEPARATOR);
+define('CONFIG_DIR', ROOT_DIR . 'config' . DIRECTORY_SEPARATOR);
+define('SERVICES_FILE', CONFIG_DIR . 'services.php');
+define('PARAMETERS_FILE', CONFIG_DIR . 'parameters.php');
 
-echo (new Test())->getGreeting() . PHP_EOL;
+require_once ROOT_DIR . 'vendor/autoload.php';
+
+$configs = include SERVICES_FILE;
+$parameters = include PARAMETERS_FILE;
+
+try {
+    $configParser = new ConfigParser(new ServiceConfigFactory(), new LoaderConfigFactory(), $configs);
+
+    $serviceConfigs = (new ServiceConfigLoader(
+        new PhpFileFinder(),
+        new ServiceConfigFactory(),
+        $configParser->getLoaderConfigs(),
+        $configParser->getServiceConfigs()
+    ))->load();
+
+    $diContainer = new Container(new ParamContainer($parameters), $serviceConfigs);
+    var_dump($diContainer->get('App\Tmp\Tmp34\C'));
+} catch (\Throwable $e) {
+    echo $e->getMessage() . PHP_EOL;
+}
+
+$kernel = new Kernel();
+$kernel->handle();
