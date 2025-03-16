@@ -1,70 +1,44 @@
 <?php
 
-use App\Core\ConfigParser\Enums\LoaderConfigType;
-use App\Core\DependencyInjection\Enums\ServiceConfigType;
-use App\Core\DependencyInjection\Factories\ServiceConfigFactory;
-use App\Core\DependencyInjection\ParamContainer\ParamContainer;
-use App\Tmp\Tmp34\C;
-use App\Tmp\Tmp34\Interfaces\ICanFly;
-use App\Tmp\Tmp34\TmpTmp\A;
-use App\Tmp\Tmp34\TmpTmp\B;
-use Psr\Container\ContainerInterface;
+use App\Core\Config\Enums\ConfigTypeKeys;
+use App\Core\Config\Enums\ServiceConfigTypeKeys;
+use App\Shared\FileSystem\File\FileReader;
+use App\Shared\FileSystem\File\FileWriter;
+use App\Shared\FileSystem\File\Interfaces\IFileReader;
+use App\Shared\FileSystem\File\Interfaces\IFileWriter;
 
 return [
-    'App\\' => [
-        LoaderConfigType::RESOURCE => '',
-        LoaderConfigType::EXCLUDE => ['Core/**'],
-        LoaderConfigType::AUTOWIRE => true,
-        LoaderConfigType::AUTOCONFIGURE => true,
-    ],
 
-    ParamContainer::class => [
-        ServiceConfigType::ARGS => [
-            'params' => ['hello.com' => 'world'],
-            'keySeparator' => '%parameters.separator%',
+    ConfigTypeKeys::PARAMETERS => [
+        'shortener' => [
+            'code_length' => 4,
+            'storage_path' => '%core.cache_dir%/url_code_pair.txt'
         ],
     ],
 
-    ServiceConfigFactory::class => [
-        ServiceConfigType::TAGS => [
-            'factory', 'athkk', 'ghjk', 'top',
+    ConfigTypeKeys::SERVICES => [
+        '_default' => [
+            ServiceConfigTypeKeys::AUTO_INJECTING => true,
+            ServiceConfigTypeKeys::AUTO_TAGGING => true,
+        ],
+
+        'App\\' => [
+            ServiceConfigTypeKeys::RESOURCE => '',
+            ServiceConfigTypeKeys::EXCLUDE => ['{Core,Shared,Views}/**', '**{Exceptions,DTO,Entities,Events}**'],
+        ],
+
+        IFileWriter::class => [
+            ServiceConfigTypeKeys::CLASSNAME => FileWriter::class,
+            ServiceConfigTypeKeys::ARGS => [
+                'path' => '%shortener.storage_path%'
+            ],
+        ],
+
+        IFileReader::class => [
+            ServiceConfigTypeKeys::CLASSNAME => FileReader::class,
+            ServiceConfigTypeKeys::ARGS => [
+                'path' => '%shortener.storage_path%'
+            ],
         ],
     ],
-
-    'top' => [
-        ServiceConfigType::CLASSNAME => ServiceConfigFactory::class,
-    ],
-
-    C::class => [
-        ServiceConfigType::ARGS => [
-            'a' => '@' . B::class,
-            'b' => '@' . B::class,
-            'c' => '$factory',
-        ],
-    ],
-
-    A::class => [
-        ServiceConfigType::ARGS => [
-            'b' => '$top',
-        ],
-        ServiceConfigType::TAGS => [
-            'factory', 'athkk', 'ghjk'
-        ],
-    ],
-
-    B::class => [
-        ServiceConfigType::TAGS => [
-            'super', 'puper', 'ultra'
-        ],
-    ],
-
-    ICanFly::class => [
-        ServiceConfigType::CLASSNAME => A::class,
-    ],
-
-    ContainerInterface::class => [
-        ServiceConfigType::CLASSNAME => ParamContainer::class,
-    ],
-
-    'rty' => [],
 ];

@@ -1,40 +1,39 @@
 #!/usr/bin/env php
 <?php
 
-use App\Core\ConfigParser\Factories\LoaderConfigFactory;
-use App\Core\ConfigParser\ConfigParser;
-use App\Core\DependencyInjection\Container\Container;
-use App\Core\DependencyInjection\Factories\ServiceConfigFactory;
-use App\Core\DependencyInjection\ParamContainer\ParamContainer;
-use App\Core\DependencyInjection\ServiceConfigLoader\PhpFileFinder;
-use App\Core\DependencyInjection\ServiceConfigLoader\ServiceConfigLoader;
-use App\Core\Kernel;
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-define('ROOT_DIR', dirname(__DIR__) . DIRECTORY_SEPARATOR);
-define('CONFIG_DIR', ROOT_DIR . 'config' . DIRECTORY_SEPARATOR);
-define('SERVICES_FILE', CONFIG_DIR . 'services.php');
-define('PARAMETERS_FILE', CONFIG_DIR . 'parameters.php');
+//$time_start = microtime(true);
+//$time_end = microtime(true);
+//
+//echo $time_end - $time_start . PHP_EOL;
 
-require_once ROOT_DIR . 'vendor/autoload.php';
+$builder = new \App\Core\DependencyInjection\Container\ParamContainerBuilder();
+$builder->setParameters([
+    'app' => [
+        'db' => [
+            'host' => 'localhost%%',
+            'user' => 'root%mail.name%%parameters.separator%',
+            'pass' => 124,
+            1,
+            2,
+            3,
+        ],
+        'cache' => [
+            'host' => 'localhost-%app.db.user%-%app.db.host%',
+            'user' => 'root',
+            'pass' => '%app.db%',
+        ],
+    ],
+    'mail' => [
+        'name' => 'mailer%app.cache.user%%mail.count%%app.db.host%',
+        'count' => 20,
+    ],
+    'parameters' => [
+        'separator' => '%mail.count%',
+    ],
+]);
 
-$configs = include SERVICES_FILE;
-$parameters = include PARAMETERS_FILE;
-
-try {
-    $configParser = new ConfigParser(new ServiceConfigFactory(), new LoaderConfigFactory(), $configs);
-
-    $serviceConfigs = (new ServiceConfigLoader(
-        new PhpFileFinder(),
-        new ServiceConfigFactory(),
-        $configParser->getLoaderConfigs(),
-        $configParser->getServiceConfigs()
-    ))->load();
-
-    $diContainer = new Container(new ParamContainer($parameters), $serviceConfigs);
-    var_dump($diContainer->get('App\Tmp\Tmp34\C'));
-} catch (\Throwable $e) {
-    echo $e->getMessage() . PHP_EOL;
-}
-
-$kernel = new Kernel();
-$kernel->handle();
+$builder->setParameter('app.db.cache.top.class', 'super%mail.name%');
+var_dump($builder->build());
+var_dump($builder->build());

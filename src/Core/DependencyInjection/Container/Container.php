@@ -2,191 +2,85 @@
 
 namespace App\Core\DependencyInjection\Container;
 
-use App\Core\DependencyInjection\Container\Exceptions\ContainerException;
 use App\Core\DependencyInjection\Container\Exceptions\NotFoundException;
-use App\Core\DependencyInjection\ParamContainer\Exceptions\NotFoundParamException;
-use App\Core\DependencyInjection\ValueObjects\ServiceConfig;
+use App\Core\DependencyInjection\Container\Interfaces\IContainer;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-class Container implements ContainerInterface
+abstract class Container implements IContainer
 {
-    protected array $services = [];
-    protected array $tags = [];
-
     /**
-     * @var array<string, ServiceConfig>
+     * @var array<string, object>
      */
-    protected array $serviceConfigs = [];
+    protected array $services = [];
+    /**
+     * @var array<string, string>
+     */
+    protected array $aliases = [];
+    /**
+     * @var array<string, string>
+     */
+    protected array $methodMap = [];
 
     public function __construct(
-        protected ContainerInterface $paramContainer,
-        array                        $serviceConfigs = [],
+        protected ContainerInterface $parameterContainer,
     )
     {
-        foreach ($serviceConfigs as $serviceName => $serviceConfig) {
-            $this->addServiceConfig($serviceName, $serviceConfig);
+    }
+
+    protected function createService(string $id): object
+    {
+        if (!isset($this->methodMap[$id])) {
+            throw new NotFoundException("Service '{$id}' not found");
         }
 
-        $this->updateTags();
+        return $this->{$this->methodMap[$id]}($this);
     }
 
-    protected function addServiceConfig(string $serviceName, ServiceConfig $serviceConfig): void
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    public function get(string $id): object
     {
-        $this->serviceConfigs[$serviceName] = $serviceConfig;
-    }
+        if (isset($this->services[$id])) {
+            return $this->services[$id];
+        }
 
-    protected function updateTags(): void
-    {
-        foreach ($this->serviceConfigs as $serviceName => $serviceConfig) {
-            foreach ($serviceConfig->getTags() as $tag) {
-                $this->tags[$tag] = isset($this->tags[$tag])
-                    ? [$serviceName, ...$this->tags[$tag]]
-                    : [$serviceName];
+        if (isset($this->aliases[$id]))
+        {
+            $id = $this->aliases[$id];
+            if (isset($this->services[$id])) {
+                return $this->services[$id];
             }
         }
-    }
 
-    public function get(string $id): mixed
-    {
-        try {
-            return $this->paramContainer->get($id);
-        } catch (NotFoundParamException) {
-            try {
-                return $this->services[$id] ?? $this->createService($id);
-            } catch (\ReflectionException $e) {
-                throw new ContainerException($e->getMessage());
-            }
-        }
+        return $this->createService($id);
     }
 
     public function has(string $id): bool
     {
-        try {
-            $this->get($id);
-        } catch (ContainerExceptionInterface) {
-            return false;
-        }
-
-        return true;
+        return isset($this->services[$id]) || isset($this->aliases[$id]) || isset($this->methodMap[$id]);
     }
 
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     * @throws \ReflectionException
-     */
-    protected function createService(string $serviceName): mixed
+    public function setService(string $id, object $service): static
     {
-        $serviceConfig = $this->serviceConfigs[$serviceName] ?? throw new NotFoundException("Service $serviceName not found");
-
-        if (count($serviceConfig->getClassNames()) > 1) {
-            $matches = '';
-            foreach ($serviceConfig->getClassNames() as $className) {
-                $matches .= "\t- {$className}\n";
-            }
-            throw new ContainerException("There are several possible matches for this service {$serviceName}:\n {$matches}");
-        }
-
-        $className = $serviceConfig->getClassNames()[0];
-
-        if ($serviceName !== $className) {
-            return $this->get($className);
-        }
-
-        if (!class_exists($className)) {
-            throw new ContainerException("Class {$className} does not exist");
-        }
-
-        $ref = new \ReflectionClass($className);
-
-        if (!$ref->isInstantiable()) {
-            throw new ContainerException("Class {$className} is not instantiable");
-        }
-
-        $service = $ref->newInstanceArgs($this->getConstructorParams($ref, $serviceConfig));
-
-        foreach ($serviceConfig->getCalls() as $call) {
-            $call($service, $this);
-        }
-
-        if ($serviceConfig->isShared()) {
-            $this->services[$serviceName] = $service;
-        }
-
-        return $service;
+        $this->services[$id] = $service;
+        return $this;
     }
 
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    protected function getConstructorParams(\ReflectionClass $ref, ServiceConfig $serviceConfig): array
+    public function getParameter(string $id): mixed
     {
-        $constructorParams = [];
-
-        if ($serviceConfig->isLocked()) {
-            throw new ContainerException("Service {$serviceConfig->getName()} has a cyclical dependence");
-        }
-        $serviceConfig->lock();
-
-        if ($ref->getConstructor() !== null) {
-            $refParams = $ref->getConstructor()->getParameters();
-
-            foreach ($refParams as $param) {
-                if (isset($serviceConfig->getArguments()[$param->getName()])) {
-                    $constructorParams[$param->getName()] = $this->getServiceArgument(
-                        $serviceConfig->getArguments()[$param->getName()]
-                    );
-                    continue;
-                }
-
-                if ($param->isDefaultValueAvailable()) {
-                    continue;
-                }
-
-                throw new ContainerException("Parameter {$param->getName()} is required but not set");
-            }
-        }
-
-        return $constructorParams;
+        return $this->parameterContainer->get($id);
     }
 
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
-    protected function getServiceArgument(mixed $argument): mixed
+    public function hasParameter(string $id): bool
     {
-        if (!is_string($argument) || $argument === '') {
-            return $argument;
-        }
-
-        if ($argument[0] === '@') {
-            return $this->get(substr($argument, 1));
-        }
-
-        if ($argument[0] === '$') {
-            return array_map(
-                fn($serviceName) => $this->get($serviceName),
-                $this->tags[substr($argument, 1)] ?? []
-            );
-        }
-
-        if ($this->isParameter($argument)) {
-            return $this->paramContainer->get(substr($argument, 1, -1));
-        }
-
-        return $argument;
-    }
-
-    protected function isParameter(string $value): bool
-    {
-        if (strlen($value) < 3) {
-            return false;
-        }
-
-        return $value[0] === '%' && $value[-1] === '%';
+        return $this->parameterContainer->has($id);
     }
 }

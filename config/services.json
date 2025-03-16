@@ -1,0 +1,32 @@
+{
+  "parameters": {
+    "shortener": {
+      "code_length": 4,
+      "storage_path": "%core.cache_dir%/url_code_pair.txt"
+    }
+  },
+
+  "services": {
+    "_default": {
+      "auto_injecting": true,
+      "auto_tagging": true
+    },
+
+    "App\\": {
+      "resource": "",
+      "exclude": ["{Core,Views}/**", "**{Exceptions,DTO,Entities,Events}**"]
+    },
+
+    "App\\Shared\\FileSystem\\File\\FileReader": {
+      "arguments": {
+        "path": "%shortener.storage_path%"
+      }
+    },
+
+    "App\\Shared\\FileSystem\\File\\FileWriter": {
+      "arguments": {
+        "path": "%shortener.storage_path%"
+      }
+    }
+  }
+}
