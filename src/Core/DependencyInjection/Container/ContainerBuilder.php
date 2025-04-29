@@ -293,14 +293,24 @@ class ContainerBuilder extends Container implements IBuilder
             $this->get($id);
         }
 
-        $dumpFilePath = $dumpFilePath ?? __DIR__ . '/Cache/CachedContainer.php';
-        $this->containerDumper->dump($dumpFilePath, $this);
+        if ($dumpFilePath === null) {
+            $dumpDir = __DIR__ . '/Cache/' . time();
+            $dumpFile = $dumpDir . '/CachedContainer.php';
+            mkdir($dumpDir, recursive: true);
+        }
 
-        require_once $dumpFilePath;
+        $filePath = $dumpFilePath ?? $dumpFile;
+        $this->containerDumper->dump($filePath, $this);
+        require_once $filePath;
 
-        $builtContainer = (new \ReflectionClass('CachedContainer'))->newInstance();
+        if ($dumpFilePath === null) {
+            unlink($dumpFile);
+            rmdir($dumpDir);
+        }
 
-        $this->parameterContainer = $this->parameterContainerBuilder;
+        $builtContainer = (new \ReflectionClass(pathinfo($filePath, PATHINFO_FILENAME)))->newInstance();
+
+        $this->parameterContainerBuilder->reset();
         $this->reset();
 
         return $builtContainer;

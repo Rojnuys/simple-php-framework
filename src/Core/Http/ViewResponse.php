@@ -9,7 +9,12 @@ class ViewResponse extends Response
         parent::__construct(statusCode: $statusCode, headers: ['Content-Type' => 'text/html']);
         extract($parameters);
         ob_start();
-        require __DIR__ . '/../../Views/' . $path;
+        try {
+            require __DIR__ . '/../../Views/' . $path;
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            throw $e;
+        }
         $this->body->write(ob_get_clean());
     }
 }

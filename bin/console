@@ -1,39 +1,31 @@
 #!/usr/bin/env php
 <?php
 
+use App\Core\Config\ConfigLoader;
+use App\Core\Config\ConfigStructureValidator;
+use App\Core\Config\Parsers\ConfigParser;
+use App\Core\Config\Parsers\JsonConfigParser;
+use App\Core\Config\Parsers\PhpConfigParser;
+use App\Core\Core\CliCore;
+use App\Core\Database\DatabaseModule;
+use App\Core\DependencyInjection\DependencyInjectionModule;
+use App\Core\FileSystem\ClassNameScanner;
+
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-//$time_start = microtime(true);
-//$time_end = microtime(true);
-//
-//echo $time_end - $time_start . PHP_EOL;
+$core = (new CliCore())
+    ->development()
+    ->setProjectDirectoryPath(dirname(__DIR__))
+    ->addModule(new DatabaseModule())
+    ->addModule(new DependencyInjectionModule(
+        dirname(__DIR__) . '/config/cli.php',
+        new ConfigParser([
+            new PhpConfigParser(),
+            new JsonConfigParser(),
+        ]),
+        new ConfigStructureValidator(),
+        new ConfigLoader(new ClassNameScanner()),
+    ))
+;
 
-$builder = new \App\Core\DependencyInjection\Container\ParamContainerBuilder();
-$builder->setParameters([
-    'app' => [
-        'db' => [
-            'host' => 'localhost%%',
-            'user' => 'root%mail.name%%parameters.separator%',
-            'pass' => 124,
-            1,
-            2,
-            3,
-        ],
-        'cache' => [
-            'host' => 'localhost-%app.db.user%-%app.db.host%',
-            'user' => 'root',
-            'pass' => '%app.db%',
-        ],
-    ],
-    'mail' => [
-        'name' => 'mailer%app.cache.user%%mail.count%%app.db.host%',
-        'count' => 20,
-    ],
-    'parameters' => [
-        'separator' => '%mail.count%',
-    ],
-]);
-
-$builder->setParameter('app.db.cache.top.class', 'super%mail.name%');
-var_dump($builder->build());
-var_dump($builder->build());
+$core->run();

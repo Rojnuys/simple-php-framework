@@ -14,8 +14,27 @@ services:
       WORKDIR: ${WORKDIR}
       XDEBUG_CONFIG: remote_host={{YOUR_IP_ADDRESS}}
       PHP_IDE_CONFIG: serverName=docker
+      DB_DRIVER: ${DB_DRIVER}
+      DB_HOST: ${DB_HOST}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./:${WORKDIR}
+
+  mysql:
+    container_name: mysql_${PROJECT_NAME}
+    image: mysql:latest
+    ports:
+      - "${MYSQL_PORT}:3306"
+    environment:
+      WORKDIR: ${WORKDIR}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   nginx:
     container_name: nginx_${PROJECT_NAME}
@@ -32,3 +51,6 @@ services:
       - ./docker/configs/nginx:/etc/nginx/conf.d
       - ./docker/configs/nginx/project.conf.template:/etc/nginx/templates/project.conf.template
       - ./var/log/nginx:/var/log/nginx
+
+volumes:
+  mysql_data: {}

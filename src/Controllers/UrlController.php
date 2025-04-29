@@ -12,7 +12,6 @@ use App\Shortener\Interfaces\IUrlCodePairRepository;
 use App\Shortener\Interfaces\IUrlDecoder;
 use App\Shortener\Interfaces\IUrlEncoder;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 
 #[Route('shortener/', methods: ['GET'])]
 class UrlController implements IController

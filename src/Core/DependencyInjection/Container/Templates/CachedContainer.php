@@ -78,12 +78,12 @@ use App\Core\DependencyInjection\Container\ContainerBuilder;
     }
 ?>
 
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+require_once dirname(__DIR__, <?= $cachedContainerClassName === 'CachedContainer' ? 6 : 2 ?>) . '/vendor/autoload.php';
 
 use App\Core\DependencyInjection\Container\Container;
 use App\Core\DependencyInjection\Container\ParamContainer;
 
-class CachedContainer extends Container
+class <?= $cachedContainerClassName ?> extends Container
 {
     public function __construct()
     {

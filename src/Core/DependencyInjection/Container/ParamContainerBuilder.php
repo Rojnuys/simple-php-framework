@@ -163,7 +163,7 @@ class ParamContainerBuilder extends ParamContainer implements IParamContainerBui
         return $value;
     }
 
-    protected function reset(): void
+    public function reset(): void
     {
         $this->parameters = [];
     }
@@ -176,9 +176,7 @@ class ParamContainerBuilder extends ParamContainer implements IParamContainerBui
         try {
             $this->buildParameters($this->parameters);
             $this->unescapeStringValues($this->parameters);
-            $paramContainer = new ParamContainer($this->parameters, $this->idSeparator);
-            $this->reset();
-            return $paramContainer;
+            return new ParamContainer($this->parameters, $this->idSeparator);
         } catch (ContainerExceptionInterface $e) {
             throw new \InvalidArgumentException('Parameter container could not be built: ' . $e->getMessage());
         }
