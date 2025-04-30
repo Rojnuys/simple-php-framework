@@ -2,6 +2,7 @@
 
 namespace App\Core\Core;
 
+use App\Core\Core\Enums\CoreMode;
 use App\Core\Core\Events\ControllerEvent;
 use App\Core\Core\Events\ExceptionEvent;
 use App\Core\Core\Events\RequestEvent;
@@ -85,23 +86,35 @@ class HttpCore extends BaseCore
     {
         try {
             $this->loadContainer();
-        } catch (\Throwable) {
-            $this->sendServerErrorResponse();
+        } catch (\Throwable $e) {
+            if ($this->mode === CoreMode::DEVELOPMENT) {
+                throw $e;
+            } else {
+                $this->sendServerErrorResponse();
+            }
             exit();
         }
 
         try {
             $this->runModules();
-        } catch (\RuntimeException) {
-            $this->sendServerErrorResponse();
+        } catch (\RuntimeException $e) {
+            if ($this->mode === CoreMode::DEVELOPMENT) {
+                throw $e;
+            } else {
+                $this->sendServerErrorResponse();
+            }
             exit();
         }
 
         try {
             $eventDispatcher = $this->container->get(EventDispatcherInterface::class);
             $router = $this->container->get(Router::class);
-        } catch (\Throwable) {
-            $this->sendServerErrorResponse();
+        } catch (\Throwable $e) {
+            if ($this->mode === CoreMode::DEVELOPMENT) {
+                throw $e;
+            } else {
+                $this->sendServerErrorResponse();
+            }
             exit();
         }
 
@@ -127,19 +140,34 @@ class HttpCore extends BaseCore
                 $eventDispatcher->dispatch($responseEvent);
                 $this->sendResponse($responseEvent->getResponse());
             } catch (\Throwable $e) {
-                $exceptionEvent = new ExceptionEvent($e);
-                $eventDispatcher->dispatch($exceptionEvent);
+                if ($this->mode === CoreMode::DEVELOPMENT) {
+                    throw $e;
+                } else {
+                    $exceptionEvent = new ExceptionEvent($e);
+                    $eventDispatcher->dispatch($exceptionEvent);
+                }
                 throw $e;
             }
-        } catch (RouteNotFoundException) {
-            $this->sendNotFoundResponse();
-        } catch (\Throwable) {
-            $this->sendServerErrorResponse();
+        } catch (RouteNotFoundException $e) {
+            if ($this->mode === CoreMode::DEVELOPMENT) {
+                throw $e;
+            } else {
+                $this->sendNotFoundResponse();
+            }
+        } catch (\Throwable $e) {
+            if ($this->mode === CoreMode::DEVELOPMENT) {
+                throw $e;
+            } else {
+                $this->sendServerErrorResponse();
+            }
         }
 
         try {
             $this->stopModules();
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
+            if ($this->mode === CoreMode::DEVELOPMENT) {
+                throw $e;
+            }
         }
     }
 

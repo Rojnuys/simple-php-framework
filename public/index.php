@@ -30,4 +30,8 @@ $core = (new HttpCore())
     ))
 ;
 
+if (getenv('MODE') === 'dev') {
+    $core->development();
+}
+
 $core->run();
