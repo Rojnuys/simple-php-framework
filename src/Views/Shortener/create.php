@@ -11,10 +11,10 @@
 <body>
 
 <div class="container mt-5">
-    <a href="/shortener" class="btn btn-success">Back</a>
+    <a href="/" class="btn btn-success">Back</a>
 
     <div class="row">
-        <form class=" mt-5" action="/shortener/encode" method="post">
+        <form class=" mt-5" action="/encode" method="post">
             <label for="url">Url:</label>
             <input class="form-control mt-3" type="text" name="url" id="url">
             <input type="submit" value="Encode" class="btn btn-success mt-3">

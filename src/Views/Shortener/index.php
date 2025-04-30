@@ -11,7 +11,7 @@
 <body>
 
 <div class="container mt-5">
-    <a href="/shortener/create" class="btn btn-success">Create code</a>
+    <a href="/create" class="btn btn-success">Create code</a>
 
     <table class="mt-5 table">
         <tr>
@@ -24,7 +24,7 @@
         <tr>
             <td><?= $urlCodePair->getId() ?></td>
             <td><?= $urlCodePair->getUrl() ?></td>
-            <td><a href="/shortener/decode/<?= $urlCodePair->getCode() ?>"><?= $urlCodePair->getCode() ?></a></td>
+            <td><a href="/decode/<?= $urlCodePair->getCode() ?>"><?= $urlCodePair->getCode() ?></a></td>
             <td><?= $urlCodePair->getCount() ?></td>
         </tr>
     <?php endforeach; ?>
