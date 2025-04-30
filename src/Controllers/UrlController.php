@@ -13,7 +13,7 @@ use App\Shortener\Interfaces\IUrlDecoder;
 use App\Shortener\Interfaces\IUrlEncoder;
 use Psr\Http\Message\ResponseInterface;
 
-#[Route('shortener/', methods: ['GET'])]
+#[Route('/', methods: ['GET'])]
 class UrlController implements IController
 {
     #[Route('')]
