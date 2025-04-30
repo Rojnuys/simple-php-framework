@@ -1,6 +1,7 @@
 .idea/
 vendor/
 var/*
-!var/.gitkeep
+!var/cache
+!var/cache/.gitkeep
 
 .env
