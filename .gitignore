@@ -2,5 +2,6 @@
 vendor/
 var/*
 !var/cache/.gitkeep
+var/cache/*
 
 .env
