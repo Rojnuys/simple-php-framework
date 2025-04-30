@@ -19,7 +19,7 @@ readonly class FileReader implements IFileReader
     public function readAll(): string
     {
         try {
-            $file = fopen($this->path, 'r');
+            $file = fopen($this->path, 'w+');
              return fread($file, filesize($this->path));
         } catch (\Throwable $e) {
             throw new ReadFileException($e->getMessage());
@@ -34,7 +34,7 @@ readonly class FileReader implements IFileReader
     public function readByLine(?callable $lineHandlerClb = null): \Generator
     {
         try {
-            $file = fopen($this->path, 'r');
+            $file = fopen($this->path, 'w+');
 
             while (false !== ($line = fgets($file))) {
                 yield isset($lineHandlerClb) ? $lineHandlerClb($line) : $line;
