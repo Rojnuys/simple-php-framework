@@ -19,6 +19,7 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      MODE: ${MODE}
     volumes:
       - ./:${WORKDIR}
     command: sh -c "composer install && php-fpm"
