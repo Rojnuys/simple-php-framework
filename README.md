@@ -1,5 +1,6 @@
 # simple-php-framework
-To run the project, you just need to start Docker in the root project directory using the following command:
+
+To run the project, you just need to create a .env file using the example .env.dist file and start Docker in the project's root directory using the following command:
 
 #### - docker-compose up -d
 
