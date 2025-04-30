@@ -2,6 +2,10 @@
 
 namespace App\Core\Core;
 
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
 class CliCore extends BaseCore
 {
     protected array $commands = [
@@ -9,6 +13,7 @@ class CliCore extends BaseCore
         'migrate:reset' => 'migrateReset',
         'migrate:refresh' => 'migrateRefresh',
         'make:migration' => 'makeMigration',
+        'cache:clear' => 'cacheClear',
     ];
     protected string $cachedContainerClassName = 'CliCachedContainer';
 
@@ -83,5 +88,30 @@ class CliCore extends BaseCore
             $this->getMigrationDirectoryPath() . DIRECTORY_SEPARATOR . $fileName,
             "<?php\n\nuse App\Core\Database\Interfaces\IMigration;\nuse Illuminate\Database\Capsule\Manager;\n\nreturn new class implements IMigration {\n\tpublic function up(): void\n\t{\n\t}\n\n\tpublic function down(): void\n\t{\n\t}\n};"
         );
+    }
+
+    protected function cacheClear(): void
+    {
+        if (!is_dir($this->getCacheDirectoryPath())) {
+            echo "Cache doesn't exist";
+            return;
+        }
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->getCacheDirectoryPath(), FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($iterator as $fileInfo) {
+            $filePath = $fileInfo->getRealPath();
+
+            if ($fileInfo->isDir()) {
+                rmdir($filePath);
+            } else {
+                unlink($filePath);
+            }
+        }
+
+        echo "Cache was cleared successfully\n";
     }
 }

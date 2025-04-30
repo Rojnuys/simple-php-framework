@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Shared\FileSystem\File;
 
-use App\Events\MyCustomEvent;
-use App\Events\TopEvent;
 use App\Shared\FileSystem\File\Exceptions\ReadFileException;
 use App\Shared\FileSystem\File\Interfaces\IFileReader;
 
@@ -13,9 +11,6 @@ readonly class FileReader implements IFileReader
 {
     public function __construct(public string $path)
     {
-        if (!file_exists($this->path)) {
-            throw new \InvalidArgumentException("The file '{$this->path}' does not exist.");
-        }
     }
 
     /**
