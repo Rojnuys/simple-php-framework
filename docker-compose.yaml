@@ -21,6 +21,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./:${WORKDIR}
+    command: sh -c "composer install && php-fpm"
 
   mysql:
     container_name: mysql_${PROJECT_NAME}
