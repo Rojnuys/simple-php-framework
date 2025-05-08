@@ -7,7 +7,7 @@ use App\Shared\FileSystem\File\FileWriter;
 use App\Shared\FileSystem\File\Interfaces\IFileReader;
 use App\Shared\FileSystem\File\Interfaces\IFileWriter;
 use App\Shortener\Interfaces\IUrlCodePairRepository;
-use App\Shortener\Repositories\DBUrlCodePairRepository;
+use App\Shortener\Repositories\FileUrlCodePairRepository;
 
 return [
     ConfigTypeKeys::PARAMETERS => [
@@ -39,7 +39,7 @@ return [
         ],
 
         IUrlCodePairRepository::class => [
-            ServiceConfigTypeKeys::CLASSNAME => DBUrlCodePairRepository::class,
+            ServiceConfigTypeKeys::CLASSNAME => FileUrlCodePairRepository::class,
         ],
 
         IFileWriter::class => [
