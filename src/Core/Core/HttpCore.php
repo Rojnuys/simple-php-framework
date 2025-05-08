@@ -125,7 +125,14 @@ class HttpCore extends BaseCore
                 $request = $requestEvent->getRequest();
                 $this->container->setService(HttpRequest::class, $request);
 
-                $route = $router->findRoute($request->getUri()->getPath(), $request->getMethod());
+                $requestMethod = $request->getMethod();
+                if ($requestMethod === 'POST') {
+                    if ( in_array($request->post('_method'), ['PUT', 'PATCH', 'DELETE']) ) {
+                        $requestMethod = $request->post('_method');
+                    }
+                }
+
+                $route = $router->findRoute($request->getUri()->getPath(), $requestMethod);
                 $arguments = $this->getActionArguments($route['controller'], $route['action'], $route['arguments']);
                 $controllerEvent = new ControllerEvent($route['controller'], $route['action'], $arguments);
                 $eventDispatcher->dispatch($controllerEvent);
